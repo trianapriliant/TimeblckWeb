@@ -155,8 +155,9 @@ export function BlockDistributionChart({ data, rows, cols }: BlockDistributionCh
         >
           {grid.flat().map((cell, index) => {
              const isCustomColor = cell?.color.startsWith('#');
-             const style = isCustomColor ? { backgroundColor: cell?.color } : {};
-             const className = !isCustomColor && cell ? (BLOCK_COLORS[cell.color as keyof typeof BLOCK_COLORS] || BLOCK_COLORS.slate).solid : 'bg-background/10';
+             const style = isCustomColor && cell ? { backgroundColor: cell.color } : {};
+             const colorKey = cell?.color as keyof typeof BLOCK_COLORS;
+             const className = !isCustomColor && cell ? (BLOCK_COLORS[colorKey] || BLOCK_COLORS.slate).solid : 'bg-background/10';
 
              return (
                  <Tooltip key={index} delayDuration={50}>

@@ -130,7 +130,8 @@ export default function TemplatesPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {recurringBlocks.map((template) => {
               const isCustomColor = template.color.startsWith('#');
-              const colorClasses = !isCustomColor ? (BLOCK_COLORS[template.color as keyof typeof BLOCK_COLORS] || BLOCK_COLORS.slate) : null;
+              const colorKey = template.color as keyof typeof BLOCK_COLORS;
+              const colorClasses = !isCustomColor ? (BLOCK_COLORS[colorKey] || BLOCK_COLORS.slate) : null;
               
               return (
                 <Card key={template.id} className="flex flex-col">
@@ -145,7 +146,7 @@ export default function TemplatesPage() {
                       className={cn(
                         "w-8 h-8",
                         settings.blockShape === 'rounded' && 'rounded-lg',
-                        !isCustomColor && colorClasses?.solid
+                        colorClasses?.solid
                       )}
                       style={isCustomColor ? { backgroundColor: template.color } : {}}
                     />
@@ -160,7 +161,7 @@ export default function TemplatesPage() {
                               style={isCustomColor && isDayActive ? { backgroundColor: template.color, color: getContrastingTextColor(template.color) } : {}}
                               className={cn(
                                 "flex-1 text-center py-1.5 rounded-md text-xs font-semibold",
-                                isDayActive && !isCustomColor ? `${colorClasses?.solid} ${colorClasses?.foreground}` : "bg-muted/60 text-muted-foreground"
+                                isDayActive && colorClasses ? `${colorClasses.solid} ${colorClasses.foreground}` : "bg-muted/60 text-muted-foreground"
                               )}
                             >
                               {day}
@@ -212,21 +213,23 @@ export default function TemplatesPage() {
           </DialogHeader>
           <ScrollArea className="h-72">
             <div className="p-1 space-y-2">
-              {SUGGESTED_TEMPLATES.map((template, index) => (
-                 <button
-                  key={index}
-                  onClick={() => handleSelectSuggestion(template)}
-                  className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors flex items-start gap-4"
-                >
-                  <div 
-                    className={cn("p-2 mt-1 rounded-lg w-10 h-10", BLOCK_COLORS[template.color as keyof typeof BLOCK_COLORS]?.solid)}
-                  />
-                  <div>
-                    <p className="font-semibold">{template.title}</p>
-                    <p className="text-sm text-muted-foreground">A recurring block for your schedule.</p>
-                  </div>
-                </button>
-              ))}
+              {SUGGESTED_TEMPLATES.map((template, index) => {
+                 const colorKey = template.color as keyof typeof BLOCK_COLORS;
+                 const colorClass = BLOCK_COLORS[colorKey] ? BLOCK_COLORS[colorKey].solid : BLOCK_COLORS.slate.solid;
+                 return (
+                    <button
+                        key={index}
+                        onClick={() => handleSelectSuggestion(template)}
+                        className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors flex items-start gap-4"
+                    >
+                        <div className={cn("p-2 mt-1 rounded-lg w-10 h-10", colorClass)} />
+                        <div>
+                        <p className="font-semibold">{template.title}</p>
+                        <p className="text-sm text-muted-foreground">A recurring block for your schedule.</p>
+                        </div>
+                    </button>
+                 )
+              })}
             </div>
           </ScrollArea>
            <Button variant="outline" onClick={handleCreateFromScratch} className="mt-4">
