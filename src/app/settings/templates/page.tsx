@@ -1,250 +1,190 @@
 
 'use client';
-
-import * as React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-
-import { useRecurringBlocks } from '@/hooks/use-recurring-blocks';
-import { useAppSettings } from '@/hooks/app-settings-provider';
-import { AddEditTemplateSheet } from '@/components/templates/add-edit-template-sheet';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { RecurringBlock } from '@/lib/types';
-import { cn, formatSlotTime, getContrastingTextColor } from '@/lib/utils';
-import { BLOCK_COLORS } from '@/lib/types';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { PremiumGate } from '@/components/shared/premium-gate';
+import { Star, BellRing, MoreHorizontal, MessageCircleQuestion, Users, Info, Twitter, Linkedin, Heart, Palette, Grip, Facebook, Youtube } from 'lucide-react';
+import { useNotificationPermission } from '@/hooks/use-notification-permission';
+import { useTranslations } from '@/hooks/use-translations';
 
-const DAY_MAP = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const InstagramIcon = (props: React.ComponentProps<'svg'>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
 
-const SUGGESTED_TEMPLATES: Omit<RecurringBlock, 'id'>[] = [
-  {
-    title: 'Rutin Pagi',
-    startTime: 7 * 6, // 7 AM
-    duration: 6, // 1 hour
-    color: 'orange',
-    daysOfWeek: [1, 2, 3, 4, 5],
-    reminderLeadTime: 0,
-  },
-  {
-    title: 'Kerja Fokus',
-    startTime: 9 * 6, // 9 AM
-    duration: 12, // 2 hours
-    color: 'violet',
-    daysOfWeek: [1, 2, 3, 4, 5],
-    reminderLeadTime: 0,
-  },
-  {
-    title: 'Olahraga',
-    startTime: 17 * 6, // 5 PM
-    duration: 6, // 1 hour
-    color: 'fuchsia',
-    daysOfWeek: [1, 3, 5],
-    reminderLeadTime: 0,
-  },
-  {
-    title: 'Belajar / Membaca',
-    startTime: 20 * 6, // 8 PM
-    duration: 6, // 1 hour
-    color: 'blue',
-    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
-    reminderLeadTime: 0,
-  },
-  {
-    title: 'Tidur Berkualitas',
-    startTime: 22 * 6, // 10 PM
-    duration: 48, // 8 hours
-    color: 'slate',
-    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
-    reminderLeadTime: 5,
-  },
-  {
-    title: 'Waktu Hobi',
-    startTime: 18 * 6, // 6 PM
-    duration: 6, // 1 hour
-    color: 'teal',
-    daysOfWeek: [2, 4],
-    reminderLeadTime: 0,
-  },
-];
-
-
-export default function TemplatesPage() {
-  const { recurringBlocks, deleteRecurringBlock } = useRecurringBlocks();
-  const { settings } = useAppSettings();
-  const [sheetOpen, setSheetOpen] = React.useState(false);
-  const [suggestionDialogOpen, setSuggestionDialogOpen] = React.useState(false);
-  const [selectedTemplate, setSelectedTemplate] = React.useState<RecurringBlock | null>(null);
-
-  const handleAddTemplateClick = () => {
-    setSelectedTemplate(null);
-    setSuggestionDialogOpen(true);
-  };
+export default function SettingsPage() {
+  const t = useTranslations();
+  const { permission, requestPermission } = useNotificationPermission();
   
-  const handleCreateFromScratch = () => {
-    setSelectedTemplate(null);
-    setSuggestionDialogOpen(false);
-    setSheetOpen(true);
-  };
+  const mainSettings = [
+    { 
+        icon: Grip, 
+        title: t.settings.navigation_title,
+        description: t.settings.navigation_description,
+        href: '/settings/navigation',
+    },
+    { 
+        icon: Star, 
+        title: t.settings.templates_title,
+        description: t.settings.templates_description,
+        href: '/settings/templates',
+    },
+    { 
+        icon: Palette, 
+        title: t.settings.appearance_title,
+        description: t.settings.appearance_description,
+        href: '/settings/appearance',
+    },
+  ];
 
-  const handleSelectSuggestion = (suggestion: Omit<RecurringBlock, 'id'>) => {
-    const newTemplate = {
-      ...suggestion,
-      id: crypto.randomUUID(), // Assign a temporary ID for the form
-    };
-    setSelectedTemplate(newTemplate);
-    setSuggestionDialogOpen(false);
-    setSheetOpen(true);
-  };
+  const moreLinks = [
+    {
+      href: '#',
+      label: t.settings.support_development,
+      icon: Heart,
+    },
+    {
+      href: '#',
+      label: t.settings.help_feedback,
+      icon: MessageCircleQuestion,
+    },
+    {
+      href: '#',
+      label: t.settings.about_timeblck,
+      icon: Info,
+    },
+  ];
 
-  const handleEditTemplate = (template: RecurringBlock) => {
-    setSelectedTemplate(template);
-    setSheetOpen(true);
-  };
-
-  const handleDelete = (template: RecurringBlock) => {
-    deleteRecurringBlock(template.id);
-  };
+  const socialLinks = [
+    { href: 'https://instagram.com/timeblck', label: 'Instagram', icon: InstagramIcon },
+    { href: 'https://facebook.com/timeblck', label: 'Facebook', icon: Facebook },
+    { href: 'https://x.com/timeblck', label: 'X', icon: Twitter },
+    { href: 'https://youtube.com/@timeblck', label: 'Youtube', icon: Youtube },
+    { href: 'https://linkedin.com/company/timeblck', label: 'LinkedIn', icon: Linkedin },
+  ];
 
   return (
-    <PremiumGate>
-      <div className="container mx-auto p-4 md:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold">Time Templates</h1>
-          <Button onClick={handleAddTemplateClick}>
-            <Plus className="mr-2 h-4 w-4" /> Add Template
-          </Button>
-        </div>
-        <p className="text-muted-foreground mb-6">
-          Manage your recurring time blocks here. They will automatically appear on your daily schedule.
-        </p>
+    <div className="container mx-auto p-4 md:p-6">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">{t.settings.title}</h1>
+      
+      <div className="space-y-6">
         
-        {recurringBlocks.length === 0 ? (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <h3 className="text-lg font-medium">No Templates Yet</h3>
-            <p className="text-muted-foreground mt-2">Click "Add Template" to create your first recurring block.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {recurringBlocks.map((template) => {
-              const isCustomColor = template.color.startsWith('#');
-              const colorKey = template.color as keyof typeof BLOCK_COLORS;
-              const colorClasses = !isCustomColor ? (BLOCK_COLORS[colorKey] || BLOCK_COLORS.slate) : null;
-              
-              return (
-                <Card key={template.id} className="flex flex-col">
-                  <CardHeader className="flex-row items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{template.title}</CardTitle>
-                      <CardDescription>
-                        {formatSlotTime(template.startTime, template.duration, settings.timeFormat)}
-                      </CardDescription>
-                    </div>
-                    <div 
-                      className={cn(
-                        "w-8 h-8",
-                        settings.blockShape === 'rounded' && 'rounded-lg',
-                        colorClasses?.solid
-                      )}
-                      style={isCustomColor ? { backgroundColor: template.color } : {}}
-                    />
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                     <div className="flex items-center gap-2">
-                        {DAY_MAP.map((day, index) => {
-                          const isDayActive = template.daysOfWeek.includes(index);
-                          return (
-                            <div 
-                              key={day} 
-                              style={isCustomColor && isDayActive ? { backgroundColor: template.color, color: getContrastingTextColor(template.color) } : {}}
-                              className={cn(
-                                "flex-1 text-center py-1.5 rounded-md text-xs font-semibold",
-                                isDayActive && colorClasses ? `${colorClasses.solid} ${colorClasses.foreground}` : "bg-muted/60 text-muted-foreground"
-                              )}
-                            >
-                              {day}
-                            </div>
-                          )
-                        })}
-                      </div>
-                  </CardContent>
-                  <div className="flex items-center justify-between p-4 border-t">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete the template "{template.title}". This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(template)}>
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                    <Button variant="outline" size="sm" onClick={() => handleEditTemplate(template)}>
-                      Edit
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <Dialog open={suggestionDialogOpen} onOpenChange={setSuggestionDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add a New Template</DialogTitle>
-            <DialogDescription>
-              Choose a suggestion to get started quickly, or create one from scratch.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-72">
-            <div className="p-1 space-y-2">
-              {SUGGESTED_TEMPLATES.map((template, index) => {
-                 const colorKey = template.color as keyof typeof BLOCK_COLORS;
-                 const colorClass = BLOCK_COLORS[colorKey] ? BLOCK_COLORS[colorKey].solid : BLOCK_COLORS.slate.solid;
-                 return (
-                    <button
-                        key={index}
-                        onClick={() => handleSelectSuggestion(template)}
-                        className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors flex items-start gap-4"
-                    >
-                        <div className={cn("p-2 mt-1 rounded-lg w-10 h-10", colorClass)} />
-                        <div>
-                        <p className="font-semibold">{template.title}</p>
-                        <p className="text-sm text-muted-foreground">A recurring block for your schedule.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {mainSettings.map(setting => (
+                <Link key={setting.href} href={setting.href} className="block hover:bg-muted/50 rounded-lg border transition-colors">
+                    <Card className="h-full shadow-none border-none bg-transparent">
+                      <CardHeader className="flex-row gap-4 items-start">
+                        <div className="bg-primary/10 p-2 rounded-lg text-primary">
+                            <setting.icon className="h-5 w-5" />
                         </div>
-                    </button>
-                 )
-              })}
-            </div>
-          </ScrollArea>
-           <Button variant="outline" onClick={handleCreateFromScratch} className="mt-4">
-              <Plus className="mr-2 h-4 w-4" />
-              Create New From Scratch
-            </Button>
-        </DialogContent>
-      </Dialog>
+                        <div>
+                            <CardTitle className="text-base">{setting.title}</CardTitle>
+                            <CardDescription className="text-xs mt-1">{setting.description}</CardDescription>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                </Link>
+            ))}
+        </div>
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BellRing className="h-5 w-5" /> {t.settings.notifications_title}
+            </CardTitle>
+            <CardDescription>
+                {t.settings.notifications_description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {permission === 'granted' && (
+                <p className="text-sm font-medium text-green-600 dark:text-green-400">{t.settings.notifications_enabled}</p>
+            )}
+            {permission === 'default' && (
+                <Button onClick={requestPermission}>{t.settings.notifications_button_enable}</Button>
+            )}
+            {permission === 'denied' && (
+                <p className="text-sm text-destructive">
+                    {t.settings.notifications_blocked}
+                </p>
+            )}
+          </CardContent>
+        </Card>
 
-      <AddEditTemplateSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        template={selectedTemplate}
-      />
-    </PremiumGate>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" /> {t.premium_gate.title}
+            </CardTitle>
+            <CardDescription>
+              {t.premium_gate.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+             <Link href="/premium" passHref>
+                <Button>
+                    <Star className="mr-2 h-4 w-4" />
+                    {t.premium_gate.upgrade_button}
+                </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+            <CardContent className="p-0">
+                <div className="grid md:grid-cols-2">
+                    <div className="p-6">
+                        <h2 className="text-2xl font-bold mb-2">Join the Community</h2>
+                        <p className="text-muted-foreground mb-6">
+                            Support development, give feedback, and stay up to date with the latest news.
+                        </p>
+                         <div className="space-y-2 mb-6">
+                            {moreLinks.map((link) => (
+                                <Button key={link.label} variant="outline" className="w-full justify-start" asChild>
+                                    <Link
+                                        href={link.href}
+                                        target={link.href.startsWith('http') ? '_blank' : undefined}
+                                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                                    >
+                                        <link.icon className="mr-2 h-4 w-4" />
+                                        {link.label}
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {socialLinks.map((link) => (
+                                <Button key={link.label} variant="outline" size="icon" asChild>
+                                    <Link
+                                        href={link.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={link.label}
+                                    >
+                                        <link.icon className="h-5 w-5" />
+                                    </Link>
+                                </Button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="bg-muted/50 hidden md:flex items-center justify-center p-6">
+                        <Image 
+                            src="https://placehold.co/600x400.png"
+                            width={600}
+                            height={400}
+                            alt="Timeblck app showcase"
+                            className="rounded-lg shadow-2xl object-cover"
+                            data-ai-hint="productivity app schedule"
+                        />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
