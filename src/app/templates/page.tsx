@@ -146,7 +146,7 @@ export default function TemplatesPage() {
                       className={cn(
                         "w-8 h-8",
                         settings.blockShape === 'rounded' && 'rounded-lg',
-                        colorClasses?.solid
+                        colorClasses?.solid || '' 
                       )}
                       style={isCustomColor ? { backgroundColor: template.color } : {}}
                     />
