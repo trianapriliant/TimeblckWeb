@@ -51,7 +51,7 @@ export function useAppSettings() {
         const firestoreSettings = userDoc?.[FIRESTORE_DOC_KEY];
         if (firestoreSettings) {
           // Merge Firestore settings with defaults to ensure all keys are present
-          setSettings(prev => ({ ...prev, ...firestoreSettings }));
+          setSettings(prev => ({ ...DEFAULT_SETTINGS, ...firestoreSettings }));
         } else {
           // New user, use local settings and prepare to sync
           const localSettings = getLocalSettings();

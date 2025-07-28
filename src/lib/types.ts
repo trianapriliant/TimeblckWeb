@@ -136,7 +136,7 @@ export interface InboxItem {
   reminderLeadTime?: number; // in minutes
 }
 
-export type NavId = 'home' | 'calendar' | 'reports' | 'habits' | 'goals' | 'matrix' | 'achievements' | 'pomodoro' | 'inbox' | 'kanban' | 'countdown';
+export type NavId = 'home' | 'calendar' | 'reports' | 'habits' | 'goals' | 'matrix' | 'achievements' | 'pomodoro' | 'inbox' | 'kanban' | 'countdown' | 'templates';
 
 export type BottomNavPairs = {
     // Slot 1 is now fixed in the UI: Timeblck/Inbox

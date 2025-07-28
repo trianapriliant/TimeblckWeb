@@ -14,6 +14,7 @@ export const translations = {
       inbox: 'Inbox',
       kanban: 'Kanban',
       countdown: 'Countdown',
+      templates: 'Templates',
     },
     common: {
         edit: 'Edit',
@@ -306,6 +307,7 @@ export const translations = {
       inbox: 'Inbox',
       kanban: 'Kanban',
       countdown: 'Hitung Mundur',
+      templates: 'Template',
     },
     common: {
         edit: 'Ubah',

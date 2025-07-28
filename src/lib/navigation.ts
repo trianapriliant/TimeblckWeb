@@ -5,7 +5,7 @@ import type { NavId } from './types';
 export interface NavItem {
   id: NavId;
   href: string;
-  labelKey: keyof typeof import('./translations').translations.en.nav;
+  labelKey: keyof typeof import('./translations').en.nav;
   icon: LucideIcon;
 }
 
@@ -15,6 +15,7 @@ export const allNavItems: NavItem[] = [
   { id: 'matrix', href: '/matrix', labelKey: 'matrix', icon: LayoutGrid },
   { id: 'kanban', href: '/kanban', labelKey: 'kanban', icon: LayoutTemplate },
   { id: 'calendar', href: '/calendar', labelKey: 'calendar', icon: CalendarDays },
+  { id: 'templates', href: '/templates', labelKey: 'templates', icon: LayoutTemplate },
   { id: 'habits', href: '/habits', labelKey: 'habits', icon: Flame },
   { id: 'pomodoro', href: '/pomodoro', labelKey: 'pomodoro', icon: Timer },
   { id: 'countdown', href: '/countdown', labelKey: 'countdown', icon: Hourglass },

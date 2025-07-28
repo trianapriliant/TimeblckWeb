@@ -86,7 +86,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 max-w-screen-2xl items-center px-4 md:px-6">
           {/* --- Mobile View --- */}
-          <div className="flex items-center gap-3 md:hidden">
+          <div className="flex w-full items-center gap-3 md:hidden">
             {isClient ? (
               <Button variant="ghost" size="icon" className="-ml-2" onClick={onMenuClick}>
                 <svg
@@ -111,18 +111,57 @@ export function Header({ onMenuClick }: HeaderProps) {
               <div className="h-10 w-10" />
             )}
             <h1 className="text-lg font-bold truncate">{pageActions?.title || 'Timeblck'}</h1>
+          
+            {/* --- Right side icons for Mobile --- */}
+            <div className="flex items-center justify-end space-x-1 ml-auto">
+                {isClient && user && pageActions?.description && (
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MessageCircleQuestion />
+                                <span className="sr-only">Page Description</span>
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                            <div className="grid gap-4">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium leading-none">{pageActions.title}</h4>
+                                    <p className="text-sm text-muted-foreground">
+                                        {pageActions.description}
+                                    </p>
+                                </div>
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                )}
+                {isClient && user && <NotificationBell />}
+                <ThemeToggle />
+                {isClient && user && pageActions?.dropdown && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-5 w-5" />
+                        <span className="sr-only">Page Actions</span>
+                    </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                    {pageActions.dropdown}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                )}
+            </div>
           </div>
           
           {/* --- Desktop View --- */}
-          <div className="hidden flex-1 items-center justify-between md:flex">
+          <div className="hidden w-full items-center md:grid md:grid-cols-3">
              {/* Left side */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 justify-start">
               <SidebarTrigger />
               {isClient && user && QuickAddMenu}
             </div>
 
             {/* Center */}
-            <div className="flex-1 text-center">
+            <div className="text-center">
               <h1 className="text-lg font-bold truncate">{pageActions?.title || 'Timeblck'}</h1>
             </div>
             
@@ -165,45 +204,6 @@ export function Header({ onMenuClick }: HeaderProps) {
                 </DropdownMenu>
               )}
             </div>
-          </div>
-
-          {/* --- Right side icons for Mobile --- */}
-          <div className="flex items-center justify-end space-x-1 ml-auto md:hidden">
-            {isClient && user && pageActions?.description && (
-                <Popover>
-                    <PopoverTrigger asChild>
-                         <Button variant="ghost" size="icon">
-                            <MessageCircleQuestion />
-                             <span className="sr-only">Page Description</span>
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                        <div className="grid gap-4">
-                            <div className="space-y-2">
-                                <h4 className="font-medium leading-none">{pageActions.title}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    {pageActions.description}
-                                </p>
-                            </div>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-            )}
-            {isClient && user && <NotificationBell />}
-            <ThemeToggle />
-            {isClient && user && pageActions?.dropdown && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-5 w-5" />
-                    <span className="sr-only">Page Actions</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {pageActions.dropdown}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
           </div>
         </div>
       </header>

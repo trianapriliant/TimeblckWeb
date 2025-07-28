@@ -28,12 +28,6 @@ export default function SettingsPage() {
         href: '/settings/navigation',
     },
     { 
-        icon: Star, 
-        title: t.settings.templates_title,
-        description: t.settings.templates_description,
-        href: '/settings/templates',
-    },
-    { 
         icon: Palette, 
         title: t.settings.appearance_title,
         description: t.settings.appearance_description,
@@ -130,7 +124,7 @@ export default function SettingsPage() {
                     <Star className="mr-2 h-4 w-4" />
                     {t.premium_gate.upgrade_button}
                 </Button>
-            </Link>
+             </Link>
           </CardContent>
         </Card>
 
