@@ -6,7 +6,7 @@ import type { RecurringBlock } from '@/lib/types';
 import { useAuth } from './use-auth';
 import { getSubcollection, migrateCollection, saveToSubcollection, deleteFromSubcollection } from '@/lib/firebase/firestore';
 
-const LOCAL_STORAGE_KEY = 'timeblck-templates';
+const LOCAL_STORAGE_KEY = 'timeblck-templates-v2'; // Bumped version for new fields
 const FIRESTORE_COLLECTION = 'templates';
 
 export function useRecurringBlocks() {
@@ -56,13 +56,19 @@ export function useRecurringBlocks() {
     }
   }, [user]);
 
-  const updateRecurringBlock = useCallback((id: string, updatedData: Omit<RecurringBlock, 'id'>) => {
-    const blockToUpdate = { id, ...updatedData };
+  const updateRecurringBlock = useCallback((id: string, updatedData: Partial<Omit<RecurringBlock, 'id'>>) => {
+    let blockToUpdate: RecurringBlock | undefined;
     setRecurringBlocks((prev) =>
-      prev.map((b) => (b.id === id ? blockToUpdate : b)).sort((a,b) => a.startTime - b.startTime)
+      prev.map((b) => {
+        if (b.id === id) {
+          blockToUpdate = { ...b, ...updatedData };
+          return blockToUpdate;
+        }
+        return b;
+      }).sort((a, b) => a.startTime - b.startTime)
     );
-    if (user) {
-        saveToSubcollection(user.uid, FIRESTORE_COLLECTION, blockToUpdate);
+    if (user && blockToUpdate) {
+      saveToSubcollection(user.uid, FIRESTORE_COLLECTION, blockToUpdate);
     }
   }, [user]);
 

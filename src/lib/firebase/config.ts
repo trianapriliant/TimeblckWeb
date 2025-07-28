@@ -22,6 +22,8 @@ if (firebaseConfig.apiKey) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
     db = getFirestore(app);
+} else {
+    console.warn("Firebase config not found, features requiring Firebase will be disabled.");
 }
 
 export { app, auth, db };

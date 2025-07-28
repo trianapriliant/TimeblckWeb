@@ -71,6 +71,8 @@ export type RecurringBlock = {
   color: BlockColor;
   daysOfWeek: number[]; // 0 for Sunday, 1 for Monday, etc.
   reminderLeadTime: number; // in minutes. 0 for no reminder.
+  startDate?: string; // Optional ISO string
+  endDate?: string; // Optional ISO string
 };
 
 export type ScheduleBlock = (TimeBlock | RecurringBlock) & {

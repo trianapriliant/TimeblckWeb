@@ -5,7 +5,8 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Bell, Check, Palette, Lock } from 'lucide-react';
+import { Bell, Check, Palette, Lock, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -23,6 +24,8 @@ import { getContrastingTextColor } from '@/lib/utils';
 import { PremiumOfferDialog } from '@/components/shared/premium-offer-dialog';
 import { useIsMobile } from '@/hooks/use-breakpoint';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required.'),
@@ -32,6 +35,8 @@ const formSchema = z.object({
   startHour: z.string(),
   startMinute: z.string(),
   duration: z.string(),
+  startDate: z.date().optional(),
+  endDate: z.date().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -76,6 +81,8 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
       startHour: '09',
       startMinute: '00',
       duration: '6', // 1 hour
+      startDate: undefined,
+      endDate: undefined,
     },
   });
 
@@ -92,6 +99,8 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
           startHour: startHour.toString().padStart(2, '0'),
           startMinute: startMinute.toString().padStart(2, '0'),
           duration: template.duration.toString(),
+          startDate: template.startDate ? new Date(template.startDate) : undefined,
+          endDate: template.endDate ? new Date(template.endDate) : undefined,
         });
       } else {
         form.reset({
@@ -102,6 +111,8 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
           startHour: '09',
           startMinute: '00',
           duration: '6',
+          startDate: undefined,
+          endDate: undefined,
         });
       }
     }
@@ -114,13 +125,15 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
     const isEditing = template ? recurringBlocks.some(rb => rb.id === template.id) : false;
     const id = isEditing ? template!.id : crypto.randomUUID();
 
-    const recurringBlockData = {
+    const recurringBlockData: Omit<RecurringBlock, 'id'> = {
         title: data.title,
         color: data.color as BlockColor,
         reminderLeadTime: data.reminderLeadTime,
         daysOfWeek: data.daysOfWeek,
         startTime,
         duration,
+        startDate: data.startDate?.toISOString(),
+        endDate: data.endDate?.toISOString(),
     };
 
     if (isEditing) {
@@ -222,6 +235,67 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
                 </FormItem>
             )}
         />
+
+         <div className="grid grid-cols-2 gap-4">
+             <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Start Date (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Perpetual</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>End Date (Optional)</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Perpetual</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+         </div>
 
         <FormField
           control={form.control}
@@ -364,7 +438,7 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <SheetTitle>{template ? 'Edit Template' : 'Add Template'}</SheetTitle>
+                  <DialogTitle>{template ? 'Edit Template' : 'Add Template'}</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="max-h-[70vh] -mx-6 px-4">
                   {content}
@@ -377,5 +451,3 @@ export function AddEditTemplateSheet({ open, onOpenChange, template }: AddEditTe
     </>
   );
 }
-
-    

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { format, getDay } from 'date-fns';
+import { format, getDay, subDays, startOfDay, endOfDay, isWithinInterval } from 'date-fns';
 import type { TimeBlock, RecurringBlock, ScheduleBlock } from '@/lib/types';
 import { useRecurringBlocks } from './use-recurring-blocks';
 import { useAuth } from './use-auth';
@@ -82,23 +82,57 @@ export function useTimeBlocksState() {
   }, [blocksByDate, isLoaded, user]);
 
   const getScheduleForDate = useCallback((date: Date): Map<number, ScheduleBlock> => {
-    const dateKey = format(date, 'yyyy-MM-dd');
     const daySchedule = new Map<number, ScheduleBlock>();
-    const dayOfWeek = getDay(date);
+    const normalizedDate = startOfDay(date);
 
-    recurringBlocks
-      .filter(rb => rb.daysOfWeek.includes(dayOfWeek))
-      .forEach(rb => {
-        const block: ScheduleBlock = { ...rb, id: `recurring-${rb.id}-${dateKey}`, isRecurring: true };
-        for (let i = 0; i < block.duration; i++) {
-          const slot = block.startTime + i;
-          if (slot < SLOTS_PER_DAY) {
-            daySchedule.set(slot, block);
-          }
+    const processRecurringBlock = (rb: RecurringBlock, dayToCheck: Date, dateKey: string) => {
+        // Check if the template is active on this day
+        if (!rb.daysOfWeek.includes(getDay(dayToCheck))) return;
+
+        // Check if the template is within its date range
+        if (rb.startDate || rb.endDate) {
+            const range = {
+                start: rb.startDate ? startOfDay(new Date(rb.startDate)) : new Date(0),
+                end: rb.endDate ? endOfDay(new Date(rb.endDate)) : new Date(8640000000000000),
+            };
+            if (!isWithinInterval(dayToCheck, range)) return;
         }
-      });
 
-    (blocksByDate[dateKey] || []).forEach(block => {
+        return { ...rb, id: `recurring-${rb.id}-${dateKey}`, isRecurring: true };
+    };
+
+    // --- Process recurring blocks from the PREVIOUS day that might spill over ---
+    const previousDay = subDays(normalizedDate, 1);
+    const previousDateKey = format(previousDay, 'yyyy-MM-dd');
+
+    recurringBlocks.forEach(rb => {
+        const block = processRecurringBlock(rb, previousDay, previousDateKey);
+        if (block) {
+            const spillOverDuration = (block.startTime + block.duration) - SLOTS_PER_DAY;
+            if (spillOverDuration > 0) {
+                for (let i = 0; i < spillOverDuration; i++) {
+                    daySchedule.set(i, { ...block, id: `${block.id}-spillover` });
+                }
+            }
+        }
+    });
+
+    // --- Process recurring blocks for the CURRENT day ---
+    const currentDateKey = format(normalizedDate, 'yyyy-MM-dd');
+    recurringBlocks.forEach(rb => {
+        const block = processRecurringBlock(rb, normalizedDate, currentDateKey);
+        if (block) {
+            for (let i = 0; i < block.duration; i++) {
+                const slot = block.startTime + i;
+                if (slot < SLOTS_PER_DAY && !daySchedule.has(slot)) {
+                    daySchedule.set(slot, block);
+                }
+            }
+        }
+    });
+
+    // --- Process one-off time blocks for the CURRENT day ---
+    (blocksByDate[currentDateKey] || []).forEach(block => {
       for (let i = 0; i < block.duration; i++) {
         const slot = block.startTime + i;
          if (slot < SLOTS_PER_DAY) {
